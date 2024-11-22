@@ -22,7 +22,7 @@ adat = sc.read_h5ad("/Users/samuelamidon/Desktop/GitRepos/VUMC_HTAN_DIS_EPI_V2.h
 
 
 
-pseudobulk_adat = pseudobulk(adat, method="mean")
+pseudobulk_adat = pseudobulk(adat)
 
 print(pseudobulk_adat)
 print(pseudobulk_adat.X)
