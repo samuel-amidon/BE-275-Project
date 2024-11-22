@@ -33,7 +33,7 @@ def prune_genes(
 def normalize(
     adata: sc.AnnData,
     norm_group: str = "HTAN Specimen ID",
-    norm_method: str = "mean"
+    norm_method: str = "median"
 ) -> sc.AnnData:
     """
     Normalize gene expression data by batch/experiment
@@ -57,7 +57,7 @@ def normalize(
 
         if norm_method == "mean":
             obs_data = obs_data / obs_data.mean(axis=0)
-        elif norm_method == "median":
+        elif norm_method == "median": #Should take in raw data in which case each element is a cell count
             obs_data = obs_data / np.median(obs_data, axis=0)
 
         data[obs_mask] = obs_data
@@ -74,16 +74,22 @@ def normalize(
 def pseudobulk(
     adata: sc.AnnData,
     groupby: str = "HTAN Specimen ID",
-    method: str = "mean",
-    cell_type_col: str = "Cell_Type"
+    norm_group: str = "HTAN Specimen ID",
+    cell_type_col: str = "Cell_Type",
+    min_expression: float = 0.1,
+    pseudobulk_method: str = "mean",
+    norm_method: str = "median"
 ) -> sc.AnnData:
     """
     Compute pseudobulk expression for each group in adata
     Parameters:
         :adata: AnnData object with gene expression data
         :groupby: column to group data by for pseudobulk
-        :method: method to aggregate data (mean or median)
+        :norm_group: column to group data by for normalization
+        :min_expression: minimum mean expression to keep gene
         :cell_type_col: column with cell type information
+        :pseudobulk_method: method to compute pseudobulk expression (mean or median)
+        :norm_method: method to normalize data (mean or median)
     Returns:
         :pseudobulk_adata: AnnData object with pseudobulk expression
     """
@@ -94,9 +100,9 @@ def pseudobulk(
     groups = adata.obs[groupby].unique()
     cell_types = adata.obs[cell_type_col].unique()
 
-    pruned_adata = prune_genes(adata, min_expression=0.05)
+    pruned_adata = prune_genes(adata, min_expression=min_expression)
 
-    normalized_adata = normalize(pruned_adata, norm_group=groupby, norm_method="mean")
+    normalized_adata = normalize(pruned_adata, norm_group=norm_group, norm_method=norm_method)
 
     data = normalized_adata.X
 
@@ -112,7 +118,7 @@ def pseudobulk(
             if group_data.shape[0] == 0:
                 continue
 
-            if method == "mean":
+            if pseudobulk_method == "mean":
                 aggregate_data = group_data.mean(axis=0)
 
             pseudobulk_data = np.vstack((pseudobulk_data, aggregate_data))
