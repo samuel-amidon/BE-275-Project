@@ -4,9 +4,19 @@ import scanpy as sc
 from pseudobulkFuncs import pseudobulk
 from tensorFactorizationFuncs import tensor_restructure, tensor_factorization
 
+# Notes
+#  adat.raw.X is the same as adat.X
 
-adat = sc.read_h5ad("/Users/samuelamidon/Desktop/GitRepos/VUMC_HTAN_DIS_EPI_V2.h5ad")
 
+adat = sc.read_h5ad("/Users/samuelamidon/Desktop/BE275 Project Supp/VUMC_HTAN_DIS_EPI_V2.h5ad")
+# adat = adat.raw
+
+# print(sum(adat.X[0]))
+# print(sum(adat.raw[0]))
+
+
+# print(adat.raw)
+# print(adat.raw.X)
 
 # print(adat.X.mean(axis=0))
 
@@ -21,7 +31,6 @@ adat = sc.read_h5ad("/Users/samuelamidon/Desktop/GitRepos/VUMC_HTAN_DIS_EPI_V2.h
 
 
 
-
 pseudobulk_adat = pseudobulk(adat)
 
 print(pseudobulk_adat)
@@ -32,24 +41,3 @@ print(pseudobulk_adat.var)
 tensor_data = tensor_restructure(pseudobulk_adat)
 
 factors = tensor_factorization(tensor_data, rank=10)
-
-
-
-
-# x = []
-
-# x = np.append(x, np.array([[1,2,3],[4,5,6],[7,8,9]]))
-# x = np.append(x, np.array([[1,2,3],[4,5,6],[7,8,9]]))
-# x = np.append(x, np.array([[1,2,3],[4,5,6],[7,8,9]]))
-
-# print(x)
-
-# x1 = np.array(x)
-
-# print(x1)
-
-
-# x = np.array([[1,2,3],[1,2,6],[1,2,9],[1,2,12]])
-# y = x / x.mean(axis=0)
-# print(x.mean(axis=0))
-# print(y)
