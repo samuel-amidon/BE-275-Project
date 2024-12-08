@@ -32,7 +32,12 @@ def tensor_restructure(
 
     assert restructured_data.shape == (n_samples, n_genes, n_cell_types), "Data shape is incorrect"
 
-    return restructured_data
+    samples = adata.obs["HTAN Specimen ID"].unique()
+    genes = adata.var
+    cell_types = adata.obs["Cell_Type"].unique()
+    names = ["Samples", "Genes", "Cell Types"]
+
+    return restructured_data, samples, genes, cell_types, names
 
 
 def reconstruct_manual(

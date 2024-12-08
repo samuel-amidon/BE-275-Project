@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import scanpy as sc
+from scanpy.get import aggregate
 
 def normalize(
     data: np.ndarray
@@ -110,22 +111,22 @@ def pseudobulk(
 
         data_norm[obs_mask, :] = normalize(data_raw[obs_mask, :])
 
-    print(data_norm)
-    print(data_norm.shape)
-    print(np.sum(data_norm, axis=0))
-    print(np.max(data_norm, axis=0))
-    print(np.min(np.max(data_norm, axis=0)))
-    print(np.mean(data_norm, axis=0))
-    print(np.min(np.mean(data_norm, axis=0)))
-    print(np.max(np.mean(data_norm, axis=0)))
-    print(np.median(np.mean(data_norm, axis=0)))
+    # print(data_norm)
+    # print(data_norm.shape)
+    # print(np.sum(data_norm, axis=0))
+    # print(np.max(data_norm, axis=0))
+    # print(np.min(np.max(data_norm, axis=0)))
+    # print(np.mean(data_norm, axis=0))
+    # print(np.min(np.mean(data_norm, axis=0)))
+    # print(np.max(np.mean(data_norm, axis=0)))
+    # print(np.median(np.mean(data_norm, axis=0)))
 
 
     ## Gene Pruning
     data_prune, gene_mask = prune_genes(data_norm, min_expression=min_expression)
 
-    print(data_prune)
-    print(data_prune.shape)
+    # print(data_prune)
+    # print(data_prune.shape)
     
     adata_processed = sc.AnnData(
         X = data_prune,
@@ -133,16 +134,18 @@ def pseudobulk(
         var = adata.var.iloc[gene_mask]
     )
 
-    print(adata_processed)
+    # print(adata_processed)
 
     data = adata_processed.X
 
-    print(data)
-    print(data.shape)
+    # print(data)
+    # print(data.shape)
 
     pseudobulk_data = np.zeros((0, data.shape[1]))
     pseudobulk_group = []
     pseudobulk_cell_type = [] #Probably want to save other patient observation columns as well for factor interpretation
+    classification = []
+
     num_empty_groups = 0
 
     assert groupby in adata.obs.columns, f"Column '{groupby}' not found in data"
@@ -168,9 +171,12 @@ def pseudobulk(
             pseudobulk_data = np.vstack((pseudobulk_data, aggregate_data))
             pseudobulk_group = np.append(pseudobulk_group, group)
             pseudobulk_cell_type = np.append(pseudobulk_cell_type, cell_type)
+            classification = np.append(classification, adata.obs["Sample_Classification"][group_mask].values[0])
 
-    print(pseudobulk_data)
-    print(pseudobulk_data.shape)
+            assert all(adata.obs["Sample_Classification"][group_mask] == adata.obs["Sample_Classification"][group_mask].values[0]), "Sample Classification mismatch"
+
+    # print(pseudobulk_data)
+    # print(pseudobulk_data.shape)
 
     assert pseudobulk_data.shape[0] == (len(adata.obs[groupby].unique()) * len(adata.obs[cell_type_col].unique()) - num_empty_groups), "Pseudobulk data was incorrectly aggregated"
 
@@ -179,12 +185,13 @@ def pseudobulk(
         obs = pd.DataFrame(
             {
                 groupby: pseudobulk_group,
-                cell_type_col: pseudobulk_cell_type
+                cell_type_col: pseudobulk_cell_type,
+                "Sample_Classification": classification
             }
         ),
         var = adata_processed.var.copy()
     )
 
-    print(pseudobulk_adata)
+    # print(pseudobulk_adata)
 
     return pseudobulk_adata
